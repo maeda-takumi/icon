@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.default_window_size = (1220, 760)
-        self.view_mode_window_size = (640, 540)
+        self.view_mode_window_size = (580, 630)
         self.resize(*self.default_window_size)
 
         self.service = LinkService()

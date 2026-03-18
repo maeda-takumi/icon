@@ -153,8 +153,8 @@ class LinkService:
 
         links: list[str] = []
         link_tag_pattern = re.compile(r"<link\b[^>]*>", re.IGNORECASE)
-        rel_pattern = re.compile(r'rel\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
-        href_pattern = re.compile(r'href\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+        rel_pattern = re.compile(r"""rel\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))""", re.IGNORECASE)
+        href_pattern = re.compile(r"""href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))""", re.IGNORECASE)
 
         for tag in link_tag_pattern.findall(html):
             rel_match = rel_pattern.search(tag)
@@ -162,11 +162,16 @@ class LinkService:
             if not rel_match or not href_match:
                 continue
 
-            rel_values = {part.strip().lower() for part in rel_match.group(1).split()}
-            if "icon" not in rel_values and "apple-touch-icon" not in rel_values:
+            rel_raw = next((value for value in rel_match.groups() if value), "")
+            rel_values = {part.strip().lower() for part in rel_raw.split()}
+            if (
+                "icon" not in rel_values
+                and "apple-touch-icon" not in rel_values
+                and "mask-icon" not in rel_values
+            ):
                 continue
 
-            href = href_match.group(1).strip()
+            href = next((value for value in href_match.groups() if value), "").strip()
             if not href:
                 continue
             links.append(urllib.parse.urljoin(page_url, href))
@@ -186,9 +191,17 @@ class LinkService:
 
     def _build_icon_candidates(self, url: str) -> list[str]:
         host = get_icon_fetch_host(url)
+        root_https = f"https://{host}"
+        root_http = f"http://{host}"
         candidates = [
-            f"https://{host}/favicon.ico",
-            f"http://{host}/favicon.ico",
+            f"{root_https}/favicon.ico",
+            f"{root_http}/favicon.ico",
+            f"{root_https}/favicon.png",
+            f"{root_http}/favicon.png",
+            f"{root_https}/apple-touch-icon.png",
+            f"{root_http}/apple-touch-icon.png",
+            f"{root_https}/apple-touch-icon-precomposed.png",
+            f"{root_http}/apple-touch-icon-precomposed.png",
         ]
 
         page_bytes: Optional[bytes] = None
