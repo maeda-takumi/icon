@@ -124,6 +124,11 @@ QPushButton:hover {
     border: 1px solid #e5e7eb;
     border-radius: 22px;
 }
+#viewModeGroupLabel {
+    font-size: 20px;
+    font-weight: 800;
+}
+
 QLineEdit {
     background: white;
     border: 1px solid #d1d5db;

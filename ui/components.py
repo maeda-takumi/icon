@@ -70,30 +70,35 @@ class LinkCard(QFrame):
         super().__init__()
         self.title = title
         self.url = url
+        self.compact = compact
         self.setObjectName("linkCard")
         self.setProperty("compact", compact)
         self.style().unpolish(self)
         self.style().polish(self)
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedSize(148, 150 if compact else 170)
+        self.setFixedSize(132, 112 if compact else 170)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(14, 12, 14, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6 if compact else 8)
         layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
 
         self.icon_wrap = QLabel()
         self.icon_wrap.setObjectName("iconWrap")
         self.icon_wrap.setAlignment(Qt.AlignCenter)
-        self.icon_wrap.setFixedSize(58, 58)
+        self.icon_wrap.setFixedSize(50 if compact else 58, 50 if compact else 58)
 
         if favicon and not favicon.isNull():
-            icon = favicon.scaled(36, 36, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            icon_size = 30 if compact else 36
+            icon = favicon.scaled(icon_size, icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.icon_wrap.setPixmap(icon)
             self.icon_wrap.setText("")
         else:
             self.icon_wrap.setText(get_initial_text(title, url))
-            self.icon_wrap.setStyleSheet("font-size: 24px; font-weight: 800; color: #111827;")
+            icon_font_size = 20 if compact else 24
+            self.icon_wrap.setStyleSheet(
+                f"font-size: {icon_font_size}px; font-weight: 800; color: #111827;"
+            )
 
         self.title_label = QLabel(title)
         self.title_label.setAlignment(Qt.AlignCenter)

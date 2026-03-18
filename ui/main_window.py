@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.default_window_size = (1220, 760)
-        self.view_mode_window_size = (640, 430)
+        self.view_mode_window_size = (640, 540)
         self.resize(*self.default_window_size)
 
         self.service = LinkService()
@@ -182,6 +182,10 @@ class MainWindow(QMainWindow):
         self.view_mode_layout.setContentsMargins(20, 20, 20, 14)
         self.view_mode_layout.setSpacing(10)
 
+        self.view_mode_group_label = QLabel("グループを選択してください")
+        self.view_mode_group_label.setObjectName("viewModeGroupLabel")
+        self.view_mode_group_label.setAlignment(Qt.AlignCenter)
+
         self.view_mode_toolbar = QWidget()
         self.view_mode_toolbar_row = QHBoxLayout(self.view_mode_toolbar)
         self.view_mode_toolbar_row.setContentsMargins(0, 0, 0, 0)
@@ -220,6 +224,7 @@ class MainWindow(QMainWindow):
         else:
             self.current_group_id = None
             self.group_title_label.setText("グループを選択してください")
+            self.view_mode_group_label.setText("グループを選択してください")
             self.update_pager_label()
             self.refresh_links()
 
@@ -237,12 +242,14 @@ class MainWindow(QMainWindow):
         if not item:
             self.current_group_id = None
             self.group_title_label.setText("グループを選択してください")
+            self.view_mode_group_label.setText("グループを選択してください")
             self.update_pager_label()
             self.refresh_links()
             return
 
         self.current_group_id = item.data(Qt.UserRole)
         self.group_title_label.setText(item.text())
+        self.view_mode_group_label.setText(item.text())
         self.update_pager_label()
         self.refresh_links()
 
@@ -296,6 +303,7 @@ class MainWindow(QMainWindow):
     def move_to_view_mode_layout(self):
         self.content_layout.removeWidget(self.scroll_area)
         self.header_card_layout.removeWidget(self.pager_container)
+        self.view_mode_layout.addWidget(self.view_mode_group_label)
         self.view_mode_layout.addWidget(self.view_mode_toolbar)
         self.view_mode_layout.addWidget(self.scroll_area, 1)
         self.view_mode_layout.addWidget(self.pager_container)
@@ -303,6 +311,7 @@ class MainWindow(QMainWindow):
         self.view_mode_frame.setVisible(True)
 
     def restore_default_layout(self):
+        self.view_mode_layout.removeWidget(self.view_mode_group_label)
         self.view_mode_layout.removeWidget(self.view_mode_toolbar)
         self.view_mode_layout.removeWidget(self.scroll_area)
         self.view_mode_layout.removeWidget(self.pager_container)
