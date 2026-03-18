@@ -76,15 +76,15 @@ class MainWindow(QMainWindow):
         side_layout.addWidget(self.delete_group_btn)
 
         self.content = QWidget()
-        content_layout = QVBoxLayout(self.content)
-        content_layout.setContentsMargins(24, 20, 24, 20)
-        content_layout.setSpacing(18)
+        self.content_layout = QVBoxLayout(self.content)
+        self.content_layout.setContentsMargins(24, 20, 24, 20)
+        self.content_layout.setSpacing(18)
 
         self.header_card = QFrame()
         self.header_card.setObjectName("headerCard")
-        header_card_layout = QVBoxLayout(self.header_card)
-        header_card_layout.setContentsMargins(22, 18, 22, 18)
-        header_card_layout.setSpacing(12)
+        self.header_card_layout = QVBoxLayout(self.header_card)
+        self.header_card_layout.setContentsMargins(22, 18, 22, 18)
+        self.header_card_layout.setSpacing(12)
 
         top_bar = QHBoxLayout()
         top_bar.setSpacing(10)
@@ -155,9 +155,11 @@ class MainWindow(QMainWindow):
         pager_row.addWidget(self.pager_label)
         pager_row.addWidget(self.next_group_btn)
 
-        header_card_layout.addLayout(top_bar)
-        header_card_layout.addWidget(self.search_container)
-        header_card_layout.addWidget(self.pager_container)
+        pager_row.addStretch()
+
+        self.header_card_layout.addLayout(top_bar)
+        self.header_card_layout.addWidget(self.search_container)
+        self.header_card_layout.addWidget(self.pager_container)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -172,9 +174,18 @@ class MainWindow(QMainWindow):
 
         self.scroll_area.setWidget(self.grid_container)
 
-        content_layout.addWidget(self.header_card)
-        content_layout.addWidget(self.scroll_area, 1)
+        self.view_mode_frame = QFrame()
+        self.view_mode_frame.setObjectName("viewModeFrame")
+        self.view_mode_frame.setMaximumWidth(820)
+        self.view_mode_frame.setVisible(False)
+        self.view_mode_layout = QVBoxLayout(self.view_mode_frame)
+        self.view_mode_layout.setContentsMargins(20, 20, 20, 14)
+        self.view_mode_layout.setSpacing(10)
 
+        self.content_layout.addWidget(self.header_card)
+        self.content_layout.addWidget(self.scroll_area, 1)
+        self.content_layout.addWidget(self.view_mode_frame, 1)
+        self.content_layout.setAlignment(self.view_mode_frame, Qt.AlignHCenter)
         root.addWidget(self.sidebar)
         root.addWidget(self.content, 1)
 
@@ -251,11 +262,29 @@ class MainWindow(QMainWindow):
             widget.style().polish(widget)
 
         if self.is_view_mode:
+            self.move_to_view_mode_layout()
             self.resize(*self.view_mode_window_size)
         else:
+            self.restore_default_layout()
             self.resize(*self.default_window_size)
 
         self.refresh_links()
+
+    def move_to_view_mode_layout(self):
+        self.content_layout.removeWidget(self.scroll_area)
+        self.header_card_layout.removeWidget(self.pager_container)
+        self.view_mode_layout.addWidget(self.scroll_area, 1)
+        self.view_mode_layout.addWidget(self.pager_container)
+        self.header_card.setVisible(False)
+        self.view_mode_frame.setVisible(True)
+
+    def restore_default_layout(self):
+        self.view_mode_layout.removeWidget(self.scroll_area)
+        self.view_mode_layout.removeWidget(self.pager_container)
+        self.content_layout.insertWidget(1, self.scroll_area, 1)
+        self.header_card_layout.addWidget(self.pager_container)
+        self.view_mode_frame.setVisible(False)
+        self.header_card.setVisible(True)
 
     def clear_grid(self):
         while self.grid_layout.count():
