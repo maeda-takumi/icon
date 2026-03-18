@@ -99,6 +99,24 @@ QPushButton:hover {
     color: #4b5563;
     font-weight: 600;
 }
+#pagerContainer[compact="true"] {
+    margin-top: 2px;
+}
+
+#pagerButton[compact="true"] {
+    min-width: 30px;
+    max-width: 30px;
+    min-height: 28px;
+    max-height: 28px;
+    border-radius: 9px;
+    padding: 2px 4px;
+    font-size: 11px;
+}
+
+#pagerLabel[compact="true"] {
+    font-size: 11px;
+}
+
 
 QLineEdit {
     background: white;

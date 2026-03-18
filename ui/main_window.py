@@ -25,7 +25,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(APP_NAME)
-        self.resize(1220, 760)
+        self.default_window_size = (1220, 760)
+        self.view_mode_window_size = (980, 640)
+        self.resize(*self.default_window_size)
 
         self.service = LinkService()
         self.current_group_id = None
@@ -117,7 +119,10 @@ class MainWindow(QMainWindow):
         top_bar.addWidget(self.add_link_btn)
         top_bar.addWidget(self.open_all_btn)
 
-        self.search_row = QHBoxLayout()
+        self.search_container = QWidget()
+        self.search_container.setObjectName("searchContainer")
+        self.search_row = QHBoxLayout(self.search_container)
+        self.search_row.setContentsMargins(0, 0, 0, 0)
         self.search_row.setSpacing(10)
 
         self.search_input = QLineEdit()
@@ -126,10 +131,15 @@ class MainWindow(QMainWindow):
 
         self.search_row.addWidget(self.search_input)
 
-        pager_row = QHBoxLayout()
+        self.pager_container = QWidget()
+        self.pager_container.setObjectName("pagerContainer")
+        pager_row = QHBoxLayout(self.pager_container)
+        pager_row.setContentsMargins(0, 0, 0, 0)
+        pager_row.setSpacing(8)
         pager_row.addStretch()
 
         self.prev_group_btn = QPushButton("◀")
+        self.prev_group_btn.setObjectName("pagerButton")
         self.prev_group_btn.setFixedWidth(48)
         self.prev_group_btn.clicked.connect(self.select_prev_group)
 
@@ -137,6 +147,7 @@ class MainWindow(QMainWindow):
         self.pager_label.setObjectName("pagerLabel")
 
         self.next_group_btn = QPushButton("▶")
+        self.next_group_btn.setObjectName("pagerButton")
         self.next_group_btn.setFixedWidth(48)
         self.next_group_btn.clicked.connect(self.select_next_group)
 
@@ -145,8 +156,8 @@ class MainWindow(QMainWindow):
         pager_row.addWidget(self.next_group_btn)
 
         header_card_layout.addLayout(top_bar)
-        header_card_layout.addLayout(self.search_row)
-        header_card_layout.addLayout(pager_row)
+        header_card_layout.addWidget(self.search_container)
+        header_card_layout.addWidget(self.pager_container)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -230,7 +241,19 @@ class MainWindow(QMainWindow):
         self.sidebar.setVisible(not self.is_view_mode)
         self.add_link_btn.setVisible(not self.is_view_mode)
         self.open_all_btn.setVisible(not self.is_view_mode)
-        self.search_input.setVisible(not self.is_view_mode)
+        self.search_container.setVisible(not self.is_view_mode)
+        self.pager_container.setProperty("compact", self.is_view_mode)
+        self.prev_group_btn.setProperty("compact", self.is_view_mode)
+        self.next_group_btn.setProperty("compact", self.is_view_mode)
+        self.pager_label.setProperty("compact", self.is_view_mode)
+        for widget in (self.pager_container, self.prev_group_btn, self.next_group_btn, self.pager_label):
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+
+        if self.is_view_mode:
+            self.resize(*self.view_mode_window_size)
+        else:
+            self.resize(*self.default_window_size)
 
         self.refresh_links()
 
