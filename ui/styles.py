@@ -118,6 +118,11 @@ QPushButton:hover {
 }
 
 
+#viewModeFrame {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 22px;
+}
 QLineEdit {
     background: white;
     border: 1px solid #d1d5db;
