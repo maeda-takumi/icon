@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.default_window_size = (1220, 760)
-        self.view_mode_window_size = (450, 350)
+        self.view_mode_window_size = (640, 430)
         self.resize(*self.default_window_size)
 
         self.service = LinkService()
@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
         keyword = "" if self.is_view_mode else self.search_input.text().strip().lower()
         links = self.service.get_filtered_links(self.current_group_id, keyword)
 
-        columns = 4 if self.is_view_mode else 6
+        columns = 3 if self.is_view_mode else 6
         for index, link in enumerate(links):
             card = LinkCard(
                 link["title"],

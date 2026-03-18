@@ -1,4 +1,5 @@
 import json
+import re
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -33,6 +34,10 @@ def get_domain_text(url: str) -> str:
     host = parsed.netloc or parsed.path
     host = host.replace("www.", "")
     return host or url
+
+def get_icon_fetch_host(url: str) -> str:
+    parsed = urllib.parse.urlparse(url)
+    return parsed.netloc or parsed.path
 
 
 def get_initial_text(title: str, url: str) -> str:
@@ -139,6 +144,73 @@ class LinkService:
         key = urllib.parse.quote(url, safe="")
         return ICON_CACHE_DIR / f"{key}.png"
 
+    @staticmethod
+    def _extract_icon_links(page_url: str, html_bytes: bytes) -> list[str]:
+        try:
+            html = html_bytes.decode("utf-8", errors="ignore")
+        except Exception:
+            return []
+
+        links: list[str] = []
+        link_tag_pattern = re.compile(r"<link\b[^>]*>", re.IGNORECASE)
+        rel_pattern = re.compile(r'rel\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+        href_pattern = re.compile(r'href\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+
+        for tag in link_tag_pattern.findall(html):
+            rel_match = rel_pattern.search(tag)
+            href_match = href_pattern.search(tag)
+            if not rel_match or not href_match:
+                continue
+
+            rel_values = {part.strip().lower() for part in rel_match.group(1).split()}
+            if "icon" not in rel_values and "apple-touch-icon" not in rel_values:
+                continue
+
+            href = href_match.group(1).strip()
+            if not href:
+                continue
+            links.append(urllib.parse.urljoin(page_url, href))
+
+        return links
+
+    @staticmethod
+    def _dedupe_keep_order(urls: list[str]) -> list[str]:
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for item in urls:
+            if item in seen:
+                continue
+            seen.add(item)
+            deduped.append(item)
+        return deduped
+
+    def _build_icon_candidates(self, url: str) -> list[str]:
+        host = get_icon_fetch_host(url)
+        candidates = [
+            f"https://{host}/favicon.ico",
+            f"http://{host}/favicon.ico",
+        ]
+
+        page_bytes: Optional[bytes] = None
+        request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                page_bytes = response.read()
+        except Exception:
+            page_bytes = None
+
+        if page_bytes:
+            candidates.extend(self._extract_icon_links(url, page_bytes))
+
+        encoded_url = urllib.parse.quote(url, safe=':/?=&')
+        candidates.extend(
+            [
+                f"https://www.google.com/s2/favicons?sz=64&domain_url={encoded_url}",
+                f"https://icons.duckduckgo.com/ip3/{host}.ico",
+            ]
+        )
+        return self._dedupe_keep_order(candidates)
+    
     def get_favicon(self, url: str) -> Optional[QPixmap]:
         if url in self.icon_cache:
             return self.icon_cache[url]
@@ -149,13 +221,7 @@ class LinkService:
             self.icon_cache[url] = pixmap
             return pixmap
 
-        domain = get_domain_text(url)
-        icon_urls = [
-            f"https://{domain}/favicon.ico",
-            f"https://www.google.com/s2/favicons?sz=64&domain_url={urllib.parse.quote(url, safe=':/?=&')}"
-        ]
-
-        for icon_url in icon_urls:
+        for icon_url in self._build_icon_candidates(url):
             try:
                 request = urllib.request.Request(icon_url, headers={"User-Agent": "Mozilla/5.0"})
                 with urllib.request.urlopen(request, timeout=3) as response:

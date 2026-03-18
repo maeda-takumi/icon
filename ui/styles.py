@@ -6,6 +6,7 @@ QMainWindow {
 QWidget {
     color: #0f172a;
     font-size: 14px;
+    background: #ffffff;
 }
 
 #sidebar {
@@ -129,7 +130,9 @@ QLineEdit {
     border-radius: 12px;
     padding: 10px 12px;
 }
-
+QVBoxLayout{
+    background: transparent;
+}
 QLineEdit:focus {
     border: 1px solid #6b7280;
 }
